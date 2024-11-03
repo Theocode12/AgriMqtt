@@ -25,10 +25,10 @@ class TestSubject(unittest.TestCase):
     def test_default_values(self):
         """Test that default values are set correctly."""
         default_subject = Subject(common_name="Default User")
-        self.assertEqual(default_subject["country_name"], "US")
-        self.assertEqual(default_subject["state_or_province_name"], "California")
-        self.assertEqual(default_subject["locality_name"], "San Francisco")
-        self.assertEqual(default_subject["organization_name"], "My Client Org")
+        self.assertEqual(default_subject["country_name"], "")
+        self.assertEqual(default_subject["state_or_province_name"], "")
+        self.assertEqual(default_subject["locality_name"], "")
+        self.assertEqual(default_subject["organization_name"], "")
 
     def test_subject_attributes(self):
         """Test that all attributes are accessible and correct."""

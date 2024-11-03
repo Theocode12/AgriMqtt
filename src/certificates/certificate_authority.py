@@ -11,37 +11,80 @@ from datetime import datetime, timedelta
 
 
 class CertificateAuthority:
-    def __init__(self, cert_path: str, key_path: str):
+    """
+    Manages a Certificate Authority (CA) to handle loading CA certificates and keys,
+    and signing Certificate Signing Requests (CSRs) for client or server authentication.
+
+    Attributes:
+        cert_file (str): Path to the CA certificate file.
+        key_file (str): Path to the CA private key file.
+        ca_key (rsa.RSAPrivateKey): The loaded private key for signing.
+        ca_cert (x509.Certificate): The loaded CA certificate.
+    """
+
+    def __init__(self, cert_path: str, key_path: str) -> None:
         """
-        Initialize with paths to the x.509 certificate and private key for MQTT authentication.
+        Initialize the CertificateAuthority with paths to the CA certificate and private key.
+
+        Parameters:
+            cert_path (str): Path to the x.509 CA certificate file.
+            key_path (str): Path to the CA's private key file.
         """
-        self.cert_file = cert_path
-        self.key_file = key_path
+        self.cert_file: str = cert_path
+        self.key_file: str = key_path
         self.ca_key = self._load_key(key_path)
         self.ca_cert = self._load_cert(cert_path)
 
-    def _load_cert(self, cert_path: str):
-        """Load the CA certificate from a file."""
+    def _load_cert(self, cert_path: str) -> x509.Certificate:
+        """
+        Load the CA certificate from a PEM file.
+
+        Parameters:
+            cert_path (str): Path to the CA certificate file.
+
+        Returns:
+            x509.Certificate: Loaded x.509 CA certificate.
+        """
         with open(cert_path, "rb") as f:
             return x509.load_pem_x509_certificate(f.read())
 
-    def _load_key(self, key_path: str):
-        """Load the CA private key from a file."""
+    def _load_key(self, key_path: str) -> rsa.RSAPrivateKey:
+        """
+        Load the CA private key from a PEM file.
+
+        Parameters:
+            key_path (str): Path to the CA private key file.
+
+        Returns:
+            rsa.RSAPrivateKey: Loaded RSA private key.
+        """
         with open(key_path, "rb") as f:
             return load_pem_private_key(f.read(), password=None)
 
-    def sign_csr(self, csr_path: str, signed_cert_path: str, valid_after=365) -> str:
+    def sign_csr(
+        self, csr_path: str, signed_cert_path: str, valid_after: int = 365
+    ) -> str:
+        """
+        Sign a Certificate Signing Request (CSR) using the CA's private key, creating a certificate.
 
+        Parameters:
+            csr_path (str): Path to the CSR file to be signed.
+            signed_cert_path (str): Path where the signed certificate will be saved.
+            valid_after (int): Number of days the signed certificate is valid for. Default is 365.
+
+        Returns:
+            str: Path to the newly created signed certificate.
+        """
         # Load the CSR
         with open(csr_path, "rb") as f:
             try:
                 csr = x509.load_pem_x509_csr(f.read())
             except ValueError as e:
-                raise e
+                raise ValueError("Invalid CSR file format") from e
             except Exception as e:
-                print(f"An unexpected error occurred: {e}")
+                raise Exception(f"An unexpected error occurred: {e}") from e
 
-        # Check that CSR is valid
+        # Validate CSR signature
         if not csr.is_signature_valid:
             raise ValueError("Invalid CSR signature")
 
@@ -68,13 +111,10 @@ class CertificateAuthority:
         return signed_cert_path
 
     def get_cert(self) -> str:
-        """Return the CA certificate file path."""
+        """
+        Retrieve the CA certificate file path.
+
+        Returns:
+            str: Path to the CA certificate file.
+        """
         return self.cert_file
-
-
-if __name__ == "__main__":
-    ca = CertificateAuthority("path/to/ca_cert.pem", "path/to/ca_key.pem")
-    signed_cert_path = ca.sign_csr(
-        "path/to/client.csr", "path/to/signed_client_cert.pem"
-    )
-    print(f"Signed certificate saved at: {signed_cert_path}")

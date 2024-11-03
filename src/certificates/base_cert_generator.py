@@ -6,20 +6,31 @@ import os
 
 
 class CertificateGenerator(ABC):
+    """
+    Abstract base class to manage RSA private key generation and define a structure
+    for certificate generation. Stores output files in a specified directory.
+
+    Attributes:
+        output_dir (str): Directory where certificates and keys will be saved. Defaults to "./certs".
+    """
+
     def __init__(self, output_dir: str = "./certs"):
         """
-        Initialize with a directory where certificates and keys will be stored.
+        Initializes the instance with an output directory. Creates the directory if it doesn’t exist.
+
+        Parameters:
+            output_dir (str): Path to the directory where certificates and keys will be stored.
         """
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
 
     def create_private_key(self, key_name: str, key_size: int = 2048) -> str:
         """
-        Generates an RSA private key and saves it as a PEM file in the specified directory.
+        Generates an RSA private key and saves it in PEM format in the specified directory.
 
         Parameters:
-            key_name (str): The name for the private key file.
-            key_size (int): The size of the RSA key in bits. Default is 2048.
+            key_name (str): Filename for the private key.
+            key_size (int): The size of the RSA key in bits, default is 2048.
 
         Returns:
             str: Path to the saved private key file.
@@ -33,16 +44,14 @@ class CertificateGenerator(ABC):
         # Define the path for the private key file
         key_path = os.path.join(self.output_dir, f"{key_name}.key")
 
-        fd = os.open(
-            key_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600
-        )  # Open with 600 permissions
+        # Open the file with 600 permissions for security and write the key
+        fd = os.open(key_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
         with os.fdopen(fd, "wb") as key_file:
-            # Write the private key to a file in PEM format
             key_file.write(
                 private_key.private_bytes(
                     encoding=serialization.Encoding.PEM,
                     format=serialization.PrivateFormat.TraditionalOpenSSL,
-                    encryption_algorithm=serialization.NoEncryption(),  # No password
+                    encryption_algorithm=serialization.NoEncryption(),
                 )
             )
 
@@ -51,10 +60,10 @@ class CertificateGenerator(ABC):
     @abstractmethod
     def generate_certificate(self, subject: Subject, key_path: str):
         """
-        Abstract method for generating a certificate.
-        Must be implemented by subclasses.
+        Abstract method for generating a certificate. Must be implemented by subclasses.
 
         Parameters:
-            key_path (str): Path to the private key file to use for signing.
+            subject (Subject): Subject information for the certificate.
+            key_path (str): Path to the private key file for signing the certificate.
         """
         pass
