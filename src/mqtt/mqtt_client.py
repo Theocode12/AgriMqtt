@@ -1,5 +1,5 @@
 from paho.mqtt import client as mqtt
-from certificates import ClientCert
+from src.certificates import ClientCert
 
 
 # --- MQTTClient Class (Handles MQTT operations) ---
@@ -16,9 +16,9 @@ class MQTTClient:
     def __init__(
         self,
         cert: ClientCert,
-        broker: str,
-        port: int,
         client_id: str,
+        broker: str,
+        port: 8883,  
     ):
         """
         Initializes an MQTT client with SSL/TLS configuration for secure communication.

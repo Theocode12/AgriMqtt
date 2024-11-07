@@ -7,6 +7,7 @@ from .subject import Subject
 from .certificate_authority import CertificateAuthority
 from .cert_models import ClientCert
 from typing import Optional
+import shutil
 import os
 
 
@@ -110,7 +111,7 @@ class ClientCertificateGenerator(CertificateGenerator):
             ClientCert: A ClientCert instance representing the generated CSR and key paths.
         """
         key_path = self.create_private_key(key_name)
-        csr_path = self.create_csr(subject, key_path=key_path)
+        csr_path = self.create_csr(subject, key_name=key_name, key_path=key_path)
 
         return ClientCert(key_path=key_path, csr_path=csr_path)
 
@@ -130,12 +131,21 @@ class ClientCertificateGenerator(CertificateGenerator):
             ClientCert: A ClientCert instance representing the signed certificate, key, CA certificate, and CSR paths.
         """
         key_path = self.create_private_key(key_name)
-        csr_path = self.create_csr(subject, key_path=key_path)
+        csr_path = self.create_csr(subject, key_name=key_name, key_path=key_path)
         cert_path = self.get_signed_csr(ca, csr_path, cert_name)
+        ca_cert_path = self.copy_ca_cert(ca)
+        print(ca_cert_path)
 
         return ClientCert(
             cert_path=cert_path,
             key_path=key_path,
-            ca_cert_path=ca.get_cert(),
+            ca_cert_path=ca_cert_path,
             csr_path=csr_path,
         )
+    
+    def copy_ca_cert(self, ca: CertificateAuthority):
+        src = ca.get_cert()
+        dest = os.path.join(self.output_dir, os.path.basename(src))
+        shutil.copy(src, dest)
+
+        return dest
