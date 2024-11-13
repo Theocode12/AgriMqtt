@@ -30,7 +30,7 @@ class MQTTClient:
             client_id (str): Unique identifier for this MQTT client instance.
         """
         self.client = mqtt.Client(client_id=client_id)
-        self.client.tls_set(cert.CERT_PATH, cert.KEY_PATH, cert.CA_CERT_PATH)
+        self.client.tls_set(cert.CA_CERT_PATH, cert.CERT_PATH, cert.KEY_PATH)
         self.broker = broker
         self.port = port
 
